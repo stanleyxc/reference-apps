@@ -46,6 +46,8 @@ public class LogAnalyzerAppMain {
   static final String OUTPUT_HTML_FILE = "o";
   static final String CHECKPOINT_DIRECTORY = "c";
   static final String HELP = "h";
+  static final String AWS_KEY = "k";
+  static final String AWS_SECRET = "t";
 
   private static final Options THE_OPTIONS = createOptions();
 
@@ -57,6 +59,9 @@ public class LogAnalyzerAppMain {
     options.addOption(SLIDE_INTERVAL, "slide-interval", true, "Slide interval in seconds");
     options.addOption(CHECKPOINT_DIRECTORY, "checkpoint-directory", true, "Directory for Spark checkpoints");
     options.addOption(HELP, "help", false, "Print help");
+    options.addOption(AWS_KEY, "aws-key", true, "aws s3 key");
+    options.addOption(AWS_SECRET, "aws-secret", true, "aws secret  key");
+	
     return options;
   }
 
@@ -79,9 +84,14 @@ public class LogAnalyzerAppMain {
     SparkConf conf = new SparkConf()
         .setAppName("A Databricks Reference Application: Logs Analysis with Spark");
     JavaSparkContext sc = new JavaSparkContext(conf);
+    //has aws 
+    if (Flags.getInstance().isAws()) {
+	  sc.hadoopConfiguration().set("fs.s3n.awsAccessKeyId", Flags.getInstance().getAwsKey());
+	  sc.hadoopConfiguration().set("fs.s3n.awsSecretAccessKey", Flags.getInstance().getAwsSecret());
+
+    }	
     JavaStreamingContext jssc = new JavaStreamingContext(sc,
         Flags.getInstance().getSlideInterval());
-
     // Checkpointing must be enabled to use the updateStateByKey function.
     jssc.checkpoint(Flags.getInstance().getCheckpointDirectory());
 
